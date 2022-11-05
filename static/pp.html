@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dihedral: Phi-Psi angles</title>
+</head>
+<body>
+<form method="post">
+    <input type="text" name="pdb_id" value="4xct"/>
+    <input type="submit">
+</form>
+
+<p>Image will be refreshed after new submit value is received</p>
+<p>{{ result|safe }}</p>
+<br>
+<br>
+<br>
+<br>
+<img src="static/{{ pdb_id|safe }}_pp.png" alt="Phi-Psi relative lineplot">
+
+</body>
+</html>
