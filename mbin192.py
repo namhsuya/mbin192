@@ -282,8 +282,8 @@ def post_chi(request: Request):
 @app.post("/chi")
 async def post_chi(request: Request, pdb_id: str = Form(...)):
     result = getChi1Chi2(pdb_id)
-    result = result.to_html()
     getChi1Chi2plot(pdb_id, result)
+    result = result.to_html()
     return templates.TemplateResponse("chi.html", context={
         'request': request, 'result': result, 'pdb_id': pdb_id
     })
