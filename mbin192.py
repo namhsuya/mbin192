@@ -212,14 +212,11 @@ def getChi1Chi2(id):
 
 def getChi1Chi2plot(id, df):
     
-    sns.set_style('white')
-    sns.set_context("paper", font_scale = 2)
     sns.set_style("whitegrid")
-
-    data = df
+    data = pd.DataFrame(df, columns=['Position', 'Residue', 'Chi1', 'Chi2'])
     data.drop("Residue", axis=1, inplace=True)
     df_melted = data.melt("Position",var_name="SideChainTorsion", value_name="Angle")
-    g=sns.relplot(data=df_melted, x="Position", y="Angle", hue="SideChainTorsion", kind="line", height=8, aspect=1.2)
+    g=sns.relplot(data=df_melted, x="Position", y="Angle", hue="SideChainTorsion", kind="line", height=6, aspect=1.2)
     g.fig.subplots_adjust(top=.95)
     plt.title("Chi1/Chi2 lineplot for PDB:"+id.lower())
     plt.tight_layout()
@@ -284,8 +281,8 @@ def post_cn(request: Request):
 @app.post("/chi")
 async def post_cn(request: Request, pdb_id: str = Form(...)):
     result = getChi1Chi2(pdb_id)
-    getChi1Chi2plot(pdb_id, result)
     result = result.to_html()
+    getChi1Chi2plot(pdb_id, result)
     return templates.TemplateResponse("cc.html", context={
         'request': request, 'result': result, 'pdb_id': pdb_id
     })
