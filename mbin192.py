@@ -272,17 +272,17 @@ async def post_cn(request: Request, pdb_id: str = Form(...)):
     })
     
 @app.get("/chi")
-def post_cn(request: Request):
+def post_chi(request: Request):
     result = "Enter PDB ID"
-    return templates.TemplateResponse("cc.html", context={
+    return templates.TemplateResponse("chi.html", context={
         'request': request, 'result': result
     })
 
 @app.post("/chi")
-async def post_cn(request: Request, pdb_id: str = Form(...)):
+async def post_chi(request: Request, pdb_id: str = Form(...)):
     result = getChi1Chi2(pdb_id)
     result = result.to_html()
     getChi1Chi2plot(pdb_id, result)
-    return templates.TemplateResponse("cc.html", context={
+    return templates.TemplateResponse("chi.html", context={
         'request': request, 'result': result, 'pdb_id': pdb_id
     })
