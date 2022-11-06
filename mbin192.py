@@ -10,6 +10,68 @@ from fastapi.templating import Jinja2Templates
 
 import Bio.PDB as pdb
 
+chi_atoms = dict(
+        chi1=dict(
+            ARG=['N', 'CA', 'CB', 'CG'],
+            ASN=['N', 'CA', 'CB', 'CG'],
+            ASP=['N', 'CA', 'CB', 'CG'],
+            CYS=['N', 'CA', 'CB', 'SG'],
+            GLN=['N', 'CA', 'CB', 'CG'],
+            GLU=['N', 'CA', 'CB', 'CG'],
+            HIS=['N', 'CA', 'CB', 'CG'],
+            ILE=['N', 'CA', 'CB', 'CG1'],
+            LEU=['N', 'CA', 'CB', 'CG'],
+            LYS=['N', 'CA', 'CB', 'CG'],
+            MET=['N', 'CA', 'CB', 'CG'],
+            PHE=['N', 'CA', 'CB', 'CG'],
+            PRO=['N', 'CA', 'CB', 'CG'],
+            SER=['N', 'CA', 'CB', 'OG'],
+            THR=['N', 'CA', 'CB', 'OG1'],
+            TRP=['N', 'CA', 'CB', 'CG'],
+            TYR=['N', 'CA', 'CB', 'CG'],
+            VAL=['N', 'CA', 'CB', 'CG1'],
+        ),
+        altchi1=dict(
+            VAL=['N', 'CA', 'CB', 'CG2'],
+        ),
+        chi2=dict(
+            ARG=['CA', 'CB', 'CG', 'CD'],
+            ASN=['CA', 'CB', 'CG', 'OD1'],
+            ASP=['CA', 'CB', 'CG', 'OD1'],
+            GLN=['CA', 'CB', 'CG', 'CD'],
+            GLU=['CA', 'CB', 'CG', 'CD'],
+            HIS=['CA', 'CB', 'CG', 'ND1'],
+            ILE=['CA', 'CB', 'CG1', 'CD1'],
+            LEU=['CA', 'CB', 'CG', 'CD1'],
+            LYS=['CA', 'CB', 'CG', 'CD'],
+            MET=['CA', 'CB', 'CG', 'SD'],
+            PHE=['CA', 'CB', 'CG', 'CD1'],
+            PRO=['CA', 'CB', 'CG', 'CD'],
+            TRP=['CA', 'CB', 'CG', 'CD1'],
+            TYR=['CA', 'CB', 'CG', 'CD1'],
+        ),
+        altchi2=dict(
+            ASP=['CA', 'CB', 'CG', 'OD2'],
+            LEU=['CA', 'CB', 'CG', 'CD2'],
+            PHE=['CA', 'CB', 'CG', 'CD2'],
+            TYR=['CA', 'CB', 'CG', 'CD2'],
+        ),
+        chi3=dict(
+            ARG=['CB', 'CG', 'CD', 'NE'],
+            GLN=['CB', 'CG', 'CD', 'OE1'],
+            GLU=['CB', 'CG', 'CD', 'OE1'],
+            LYS=['CB', 'CG', 'CD', 'CE'],
+            MET=['CB', 'CG', 'SD', 'CE'],
+        ),
+        chi4=dict(
+            ARG=['CG', 'CD', 'NE', 'CZ'],
+            LYS=['CG', 'CD', 'CE', 'NZ'],
+        ),
+        chi5=dict(
+            ARG=['CD', 'NE', 'CZ', 'NH1'],
+        ),
+    )
+
 
 def get_structure(id):
     
@@ -119,6 +181,49 @@ def getPhiPsiplot(id, df):
     plt.savefig('static/'+str(id.lower())+'_pp.png', bbox_inches='tight')
 
 
+def getChi1Chi2(id):
+
+    chi1_chi2_out = []
+
+    for chain in get_structure(id):
+        for residue in chain:
+            # Skip heteroatoms
+            if residue.id[0] != " ": continue
+            res_name = residue.resname
+            if res_name in ("ALA", "GLY"): continue
+
+            atoms = residue.get_list()
+            atom_data = {}
+            for atom in atoms:
+                atom_data[atom.fullname.replace(" ", "")] = atom.get_vector()
+
+            if res_name in chi_atoms["chi1"].keys():
+                chi1_vec = [atom_data[a] for a in chi_atoms["chi1"][res_name]]
+            chi1 = pdb.calc_dihedral(*chi1_vec)
+
+            if res_name in chi_atoms["chi2"].keys():
+                chi2_vec = [atom_data[a]  for a in chi_atoms["chi2"][res_name]]
+            chi2 = pdb.calc_dihedral(*chi2_vec)
+        
+            chi1_chi2_out.append([residue.id[1], res_name, degrees(chi1), degrees(chi2)])
+
+    chi1_chi2_out = pd.DataFrame(chi1_chi2_out, columns=["Position", "Residue", "Chi1", "Chi2"])
+    return chi1_chi2_out
+
+def getChi1Chi2plot(id, df):
+    
+    sns.set_style('white')
+    sns.set_context("paper", font_scale = 2)
+    sns.set_style("whitegrid")
+
+    data = df
+    data.drop("Residue", axis=1, inplace=True)
+    df_melted = data.melt("Position",var_name="SideChainTorsion", value_name="Angle")
+    g=sns.relplot(data=df_melted, x="Position", y="Angle", hue="SideChainTorsion", kind="line", height=8, aspect=1.2)
+    g.fig.subplots_adjust(top=.95)
+    plt.title("Chi1/Chi2 lineplot for PDB:"+id.lower())
+    plt.tight_layout()
+    plt.savefig('static/'+str(id.lower())+'_cc.png', bbox_inches='tight')
 
 app = FastAPI()
 templates = Jinja2Templates(directory='static/')
@@ -169,4 +274,18 @@ async def post_cn(request: Request, pdb_id: str = Form(...)):
         'request': request, 'result': result, 'pdb_id': pdb_id
     })
     
+@app.get("/cc")
+def post_cn(request: Request):
+    result = "Enter PDB ID"
+    return templates.TemplateResponse("cc.html", context={
+        'request': request, 'result': result
+    })
 
+@app.post("/cc")
+async def post_cn(request: Request, pdb_id: str = Form(...)):
+    result = getChi1Chi2(pdb_id)
+    getChi1Chi2plot(pdb_id, result)
+    result = result.to_html()
+    return templates.TemplateResponse("cc.html", context={
+        'request': request, 'result': result, 'pdb_id': pdb_id
+    })
