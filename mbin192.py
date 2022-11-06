@@ -213,14 +213,15 @@ def getChi1Chi2(id):
 def getChi1Chi2plot(id, df):
     
     sns.set_style("whitegrid")
-    data = pd.DataFrame(df, columns=['Position', 'Residue', 'Chi1', 'Chi2'])
+    #data = pd.DataFrame(df, columns=['Position', 'Residue', 'Chi1', 'Chi2'])
+    data = df.copy()
     data.drop("Residue", axis=1, inplace=True)
     df_melted = data.melt("Position",var_name="SideChainTorsion", value_name="Angle")
     g=sns.relplot(data=df_melted, x="Position", y="Angle", hue="SideChainTorsion", kind="line", height=6, aspect=1.2)
     g.fig.subplots_adjust(top=.95)
     plt.title("Chi1/Chi2 lineplot for PDB:"+id.lower())
     plt.tight_layout()
-    plt.savefig('static/'+str(id.lower())+'_cc.png', bbox_inches='tight')
+    plt.savefig('static/'+str(id.lower())+'_chi.png', bbox_inches='tight')
 
 app = FastAPI()
 templates = Jinja2Templates(directory='static/')
