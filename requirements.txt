@@ -9,3 +9,4 @@ pydantic
 PyYAML
 seaborn
 uvicorn
+python-multipart
