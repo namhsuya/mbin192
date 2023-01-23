@@ -346,7 +346,7 @@ def aa_neighbors_distances(id, neighbor):
     aa_neighbors=[]
     for chain in chains:
       for res in chain:
-        if not res in amino_acids+["HOH"]:
+        if not res.resname in amino_acids+["HOH"]:
           for atom in res:
             for a in aa:
               a_chain = a[0]
