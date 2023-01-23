@@ -10,12 +10,6 @@ from fastapi.templating import Jinja2Templates
 
 import Bio.PDB as pdb
 
-amino_acids = ["ala", "arg", "asn", "asp",
-               "cys", "glu", "gln", "gly",
-               "his", "ile", "leu", "lys",
-               "met", "phe", "pro", "ser",
-               "thr", "trp", "tyr", "val"]
-
 chi_atoms = dict(
         chi1=dict(
             ARG=['N', 'CA', 'CB', 'CG'],
@@ -335,6 +329,12 @@ def aa_neighbors_distances(id, neighbor):
     
     structures = get_structure(id)
     chains = list(structures.get_chains())
+    # Collect amino acids
+    amino_acids = ["ala", "arg", "asn", "asp",
+               "cys", "glu", "gln", "gly",
+               "his", "ile", "leu", "lys",
+               "met", "phe", "pro", "ser",
+               "thr", "trp", "tyr", "val"]
     amino_acids = [a.upper() for a in amino_acids]
 
     aa=[]
@@ -430,14 +430,14 @@ async def post_chi(request: Request, pdb_id: str = Form(...)):
     })
 
 @app.get("/bs")
-def post_chi(request: Request):
+def post_bs(request: Request):
     result = "Enter PDB ID"
     return templates.TemplateResponse("bs.html", context={
         'request': request, 'result': result
     })
 
 @app.post("/bs")
-async def post_chi(request: Request, pdb_id: str = Form(...)):
+async def post_bs(request: Request, pdb_id: str = Form(...)):
     result = get_backbone_sidechain(pdb_id)
     result = result.to_html()
     return templates.TemplateResponse("bs.html", context={
@@ -445,15 +445,15 @@ async def post_chi(request: Request, pdb_id: str = Form(...)):
     })
 
 @app.get("/metal")
-def post_chi(request: Request):
+def post_metal(request: Request):
     result = "Enter PDB ID"
     return templates.TemplateResponse("metal.html", context={
         'request': request, 'result': result
     })
 
 @app.post("/metal")
-async def post_chi(request: Request, pdb_id: str = Form(...), ligand: str = Form(...), neighbor: float = Form(...)):
-    result = ligand_neighbors_distances(pdb_id, neighbor)
+async def post_metal(request: Request, pdb_id: str = Form(...), ligand: str = Form(...), neighbor: float = Form(...)):
+    result = ligand_neighbors_distances(pdb_id, ligand, neighbor)
     result = result.to_html()
     return templates.TemplateResponse("metal.html", context={
         'request': request, 'result': result, 'pdb_id': pdb_id
@@ -461,14 +461,14 @@ async def post_chi(request: Request, pdb_id: str = Form(...), ligand: str = Form
 
 
 @app.get("/aa")
-def post_chi(request: Request):
+def post_aa(request: Request):
     result = "Enter PDB ID"
     return templates.TemplateResponse("aa.html", context={
         'request': request, 'result': result
     })
 
 @app.post("/aa")
-async def post_chi(request: Request, pdb_id: str = Form(...), neighbor: float = Form(...)):
+async def post_aa(request: Request, pdb_id: str = Form(...), neighbor: float = Form(...)):
     result = aa_neighbors_distances(pdb_id, neighbor)
     result = result.to_html()
     return templates.TemplateResponse("aa.html", context={
